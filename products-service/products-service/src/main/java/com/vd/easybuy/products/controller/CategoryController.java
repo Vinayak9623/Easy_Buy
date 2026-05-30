@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @RestController
 @Validated
-@RequestMapping("/api/category")
+@RequestMapping("/api/categories")
 public class CategoryController {
 
     private final CategoryService categoryService;

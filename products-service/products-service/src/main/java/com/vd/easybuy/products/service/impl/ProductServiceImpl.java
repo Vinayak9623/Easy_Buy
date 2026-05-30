@@ -145,7 +145,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<String> getProductImages(UUID productId) {
-        return List.of();
+        Product product = findProduct(productId);
+        return product.getProductImages() == null ? new ArrayList<>() : new ArrayList<>(product.getProductImages());
     }
 
     private List<String> uploadImages(List<MultipartFile> files) {
