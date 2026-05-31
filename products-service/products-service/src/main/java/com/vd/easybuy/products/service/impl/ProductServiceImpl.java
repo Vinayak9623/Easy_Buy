@@ -281,7 +281,7 @@ public class ProductServiceImpl implements ProductService {
         CategoryDto dto = new CategoryDto();
         dto.setId(category.getId());
         dto.setTitle(category.getTitle());
-        dto.setProducts(new ArrayList<>());
+       // dto.setProducts(new ArrayList<>());
         return dto;
     }
 

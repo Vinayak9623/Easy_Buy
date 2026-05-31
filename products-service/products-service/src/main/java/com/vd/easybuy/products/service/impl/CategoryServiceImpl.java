@@ -74,24 +74,24 @@ public class CategoryServiceImpl implements CategoryService {
         CategoryDto dto = new CategoryDto();
         dto.setId(category.getId());
         dto.setTitle(category.getTitle());
-        dto.setProducts(category.getProducts() == null ? new ArrayList<>()
-                : category.getProducts()
-                .stream()
-                .map(product -> {
-                    var productDto = new ProductDto();
-                    productDto.setId(product.getId());
-                    productDto.setTitle(product.getTitle());
-                    productDto.setShortDesc(product.getShortDesc());
-                    productDto.setLongDesc(product.getLongDesc());
-                    productDto.setPrice(product.getPrice());
-                    productDto.setDiscount(product.getDiscount());
-                    productDto.setLive(product.getLive());
-                    productDto.setProductImages(product.getProductImages() == null
-                            ? new ArrayList<>() : new ArrayList<>(product.getProductImages()));
-                    productDto.setCategories(new ArrayList<>());
-                    productDto.setReviews(new ArrayList<>());
-                    return productDto;
-                }).collect(Collectors.toList()));
+//        dto.setProducts(category.getProducts() == null ? new ArrayList<>()
+//                : category.getProducts()
+//                .stream()
+//                .map(product -> {
+//                    var productDto = new ProductDto();
+//                    productDto.setId(product.getId());
+//                    productDto.setTitle(product.getTitle());
+//                    productDto.setShortDesc(product.getShortDesc());
+//                    productDto.setLongDesc(product.getLongDesc());
+//                    productDto.setPrice(product.getPrice());
+//                    productDto.setDiscount(product.getDiscount());
+//                    productDto.setLive(product.getLive());
+//                    productDto.setProductImages(product.getProductImages() == null
+//                            ? new ArrayList<>() : new ArrayList<>(product.getProductImages()));
+//                    productDto.setCategories(new ArrayList<>());
+//                    productDto.setReviews(new ArrayList<>());
+//                    return productDto;
+//                }).collect(Collectors.toList()));
 
         return dto;
     }
