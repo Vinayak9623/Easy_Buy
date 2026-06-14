@@ -13,14 +13,13 @@ public class RouterConfig {
     private final String productServiceId;
     private final String cartOrderServiceId;
 
-    public RouterConfig(@Value("${product.service.id}") String productServiceId,
-                        @Value("${cart-order.service.id}") String cartOrderServiceId) {
+    public RouterConfig(@Value("${PRODUCT_SERVICE_ID:PRODUCT-SERVICE}") String productServiceId,
+                        @Value("${CART_ORDER_SERVICE_ID:CART-ORDER-SERVICE}") String cartOrderServiceId) {
         this.productServiceId = productServiceId;
         this.cartOrderServiceId=cartOrderServiceId;
     }
 
     @Bean
-    @Profile("dev")
     public RouteLocator route(RouteLocatorBuilder builder) {
 
         return builder.routes()
@@ -44,7 +43,7 @@ public class RouterConfig {
     }
 
 
-    @Profile("prod")
+    @Bean
     public RouteLocator prodroute(RouteLocatorBuilder builder) {
 
         return builder.routes()
