@@ -6,6 +6,8 @@ import com.vd.easybuy.products.service.ProductService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +20,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/products")
 @Validated
+@RefreshScope
 public class ProductController {
 
     private final ProductService productService;
+
+    @Value("${imagekit.folder}")
+    private String imageKitUrl;
 
     public ProductController(ProductService productService) {
         this.productService = productService;
@@ -90,6 +96,11 @@ public class ProductController {
     @GetMapping("/{productId}/images")
     public ResponseEntity<List<String>> getProductImages(@PathVariable UUID productId) {
         return ResponseEntity.ok(productService.getProductImages(productId));
+    }
+
+    @GetMapping("/imagekit-url")
+    public ResponseEntity<String> getImageKitUrl(){
+        return ResponseEntity.ok(imageKitUrl);
     }
 }
 
