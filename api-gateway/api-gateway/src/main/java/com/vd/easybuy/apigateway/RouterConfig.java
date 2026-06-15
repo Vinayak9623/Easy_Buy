@@ -25,7 +25,9 @@ public class RouterConfig {
         return builder.routes()
                 .route("product-route", r -> r
                         .path("/products/**")
-                        .filters(f -> f.rewritePath(
+                        .filters(f -> f.circuitBreaker(c->c.setName("ProductCircuitBreaker")
+                                        .setFallbackUri("forward:/product-fallback"))
+                                .rewritePath(
                                 "/products/(?<remaining>.*)",
                                 "/${remaining}"
                         ))
