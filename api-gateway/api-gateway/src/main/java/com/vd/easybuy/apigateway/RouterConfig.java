@@ -31,7 +31,7 @@ public class RouterConfig {
                                 "/products/(?<remaining>.*)",
                                 "/${remaining}"
                         ))
-                        .uri(productServiceId))
+                        .uri("lb://"+productServiceId))
 
 
                 .route("cart-order-route",c->c
@@ -40,31 +40,31 @@ public class RouterConfig {
                                 "/cart-orders/(?<remaining>.*)",
                                 "/${remaining}"
                         ))
-                        .uri(cartOrderServiceId))
+                        .uri("lb://"+cartOrderServiceId))
                 .build();
     }
 
 
-    @Bean
-    public RouteLocator prodroute(RouteLocatorBuilder builder) {
-
-        return builder.routes()
-                .route("product-route", r -> r
-                        .path("/products/**")
-                        .filters(f -> f.rewritePath(
-                                "/products/(?<remaining>.*)",
-                                "/${remaining}"
-                        ))
-                        .uri(productServiceId))
-
-
-                .route("cart-order-route",c->c
-                        .path("/cart-orders/**")
-                        .filters(f->f.rewritePath(
-                                "/cart-orders/(?<remaining>.*)",
-                                "/${remaining}"
-                        ))
-                        .uri(cartOrderServiceId))
-                .build();
-    }
+//    @Bean
+//    public RouteLocator prodroute(RouteLocatorBuilder builder) {
+//
+//        return builder.routes()
+//                .route("product-route", r -> r
+//                        .path("/products/**")
+//                        .filters(f -> f.rewritePath(
+//                                "/products/(?<remaining>.*)",
+//                                "/${remaining}"
+//                        ))
+//                        .uri(productServiceId))
+//
+//
+//                .route("cart-order-route",c->c
+//                        .path("/cart-orders/**")
+//                        .filters(f->f.rewritePath(
+//                                "/cart-orders/(?<remaining>.*)",
+//                                "/${remaining}"
+//                        ))
+//                        .uri(cartOrderServiceId))
+//                .build();
+//    }
 }
