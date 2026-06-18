@@ -1,6 +1,15 @@
 Command to start postgres
 docker run -d --name postgres-db -e POSTGRES_DB=productdb -e POSTGRES_USER=user -e POSTGRES_PASSWORD=root -p 5432:5432 -v pgdata:/var/lib/postgresql/data postgres:16
 
+##docker command to run redis
+
+docker run -d \
+--name redis-server \
+-p 6379:6379 \
+redis:latest
+
+
+
 # 📖 Easy Buy E-Commerce API Documentation
 
 This document contains the complete API specifications for the **Easy Buy** E-Commerce backend services, running on Spring Boot and Spring Cloud.

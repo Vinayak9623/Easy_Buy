@@ -7,6 +7,7 @@ import com.vd.easybuy.cart_order.dto.ProductResponse;
 import com.vd.easybuy.cart_order.repository.CartRepository;
 import com.vd.easybuy.cart_order.repository.OrderRepository;
 import com.vd.easybuy.cart_order.service.OrderService;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -60,8 +61,14 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+
+    @Retry(name = "createOrderRetry",fallbackMethod = "createOrderWithRestClientFallback")
     @Override
     public ProductResponse createOrderWithRestClient(OrderCreateRequest orderCreateRequest) {
+        log.info("Retrying");
+        if(2<3){
+            throw new RuntimeException("For retry testing");
+        }
 
         String productId=orderCreateRequest.items().getFirst().productId();
         var productUrl="http://localhost:8081/api/products/"+productId;
@@ -78,8 +85,18 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+
+    public ProductResponse createOrderWithRestClientFallback(OrderCreateRequest orderCreateRequest , Throwable t){
+        log.info("Create order fallback");
+        log.info("Exception {}",t.getMessage());
+
+        return null;
+    }
+
     @Override
     public ProductResponse createOrderWithFeign(OrderCreateRequest orderCreateRequest) {
+        log.info("Retrying");
+        if(2<5){throw new RuntimeException("For retry testing"+"Request failed");}
         return productClientTest.getPeoductById(orderCreateRequest.items().getFirst().productId());
     }
 

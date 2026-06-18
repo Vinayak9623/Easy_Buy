@@ -1,11 +1,18 @@
 package com.vd.easybuy.apigateway;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
+import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 @Configuration
 public class RouterConfig {
@@ -25,7 +32,11 @@ public class RouterConfig {
         return builder.routes()
                 .route("product-route", r -> r
                         .path("/products/**")
-                        .filters(f -> f.circuitBreaker(c->c.setName("ProductCircuitBreaker")
+                        .filters(f -> f
+                                .requestRateLimiter(requestRateLimiterConfig -> requestRateLimiterConfig
+                                        .setKeyResolver(keyResolver())
+                                        .setRateLimiter(redisRateLimiter()))
+                                .circuitBreaker(c->c.setName("ProductCircuitBreaker")
                                         .setFallbackUri("forward:/product-fallback"))
                                 .rewritePath(
                                 "/products/(?<remaining>.*)",
@@ -39,9 +50,32 @@ public class RouterConfig {
                         .filters(f->f.rewritePath(
                                 "/cart-orders/(?<remaining>.*)",
                                 "/${remaining}"
-                        ))
+                        )
+                                        .retry(retryConfig -> retryConfig
+                                                .setRetries(3)
+                                                .setMethods(HttpMethod.GET,HttpMethod.POST)
+                                                .setBackoff(Duration.
+                                                        ofMillis(100),Duration
+                                                        .ofMillis(1000),2,true))
+
+
+                        )
                         .uri("lb://"+cartOrderServiceId))
                 .build();
+    }
+
+
+    @Bean
+    public KeyResolver keyResolver(){
+        return exchange->Mono
+                .just(exchange.getRequest()
+                        .getHeaders()
+                        .getFirst("user"));
+    }
+
+    @Bean
+    public RedisRateLimiter redisRateLimiter(){
+        return new RedisRateLimiter(4,4,1);
     }
 
 
