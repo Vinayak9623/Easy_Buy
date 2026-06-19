@@ -8,12 +8,12 @@ import java.util.UUID;
 
 public interface UserService {
 
-    UserDto registerUser(UserDto userDto);
+    UserDto createUser(UserDto userDto);
     UserDto getUserById(UUID id);
     UserDto getUserByEmail(String email);
-    List<UserDto> getAllUser();
+    List<UserDto> getAllUsers();
     UserDto updateUser(UUID id,UserDto userDto);
     void deleteUser(UUID id);
-    UserDto changeUserRole(UUID id, Role role);
+    void changeUserRole(UUID id, Role role);
 
 }

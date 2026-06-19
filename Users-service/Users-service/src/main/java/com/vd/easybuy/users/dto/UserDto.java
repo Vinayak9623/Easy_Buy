@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -19,5 +20,7 @@ public class UserDto {
     private String password;
     private Long phoneNumber;
     private String address;
-    private Role role=Role.GUEST;
+    private Role role;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

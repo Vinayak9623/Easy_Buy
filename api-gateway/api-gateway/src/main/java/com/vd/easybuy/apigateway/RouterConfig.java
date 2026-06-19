@@ -19,11 +19,14 @@ public class RouterConfig {
 
     private final String productServiceId;
     private final String cartOrderServiceId;
+    private final String userServiceId;
 
     public RouterConfig(@Value("${PRODUCT_SERVICE_ID:PRODUCT-SERVICE}") String productServiceId,
-                        @Value("${CART_ORDER_SERVICE_ID:CART-ORDER-SERVICE}") String cartOrderServiceId) {
+                        @Value("${CART_ORDER_SERVICE_ID:CART-ORDER-SERVICE}") String cartOrderServiceId,
+                        @Value("${USER_SERVICE_ID:USER-SERVICE}") String userServiceId) {
         this.productServiceId = productServiceId;
         this.cartOrderServiceId=cartOrderServiceId;
+        this.userServiceId=userServiceId;
     }
 
     @Bean
@@ -61,6 +64,11 @@ public class RouterConfig {
 
                         )
                         .uri("lb://"+cartOrderServiceId))
+
+                .route("users-route",route->route.path("/users/**")
+                        .filters(f->
+                                f.stripPrefix(1)
+                        ).uri("lb://"+userServiceId))
                 .build();
     }
 

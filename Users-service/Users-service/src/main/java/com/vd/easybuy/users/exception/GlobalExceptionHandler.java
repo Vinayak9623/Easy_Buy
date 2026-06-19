@@ -13,9 +13,19 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex,HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND,ex.getMessage(),request.getRequestURI(),List.of());
+    }
+
     @ExceptionHandler(EmailAlreadyExistException.class)
     public ResponseEntity<ErrorResponse> handleEmailAlreadyExistException(EmailAlreadyExistException ex, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI(),List.of());
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(InvalidRequestException ex,HttpServletRequest request){
+        return build(HttpStatus.BAD_REQUEST,ex.getMessage(),request.getRequestURI(),List.of());
     }
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, String path, List<String> fieldErrors){
