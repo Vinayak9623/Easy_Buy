@@ -7,9 +7,7 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -20,13 +18,17 @@ public class RouterConfig {
     private final String productServiceId;
     private final String cartOrderServiceId;
     private final String userServiceId;
+    private final String inventoryServiceId;
 
     public RouterConfig(@Value("${PRODUCT_SERVICE_ID:PRODUCT-SERVICE}") String productServiceId,
                         @Value("${CART_ORDER_SERVICE_ID:CART-ORDER-SERVICE}") String cartOrderServiceId,
-                        @Value("${USER_SERVICE_ID:USER-SERVICE}") String userServiceId) {
+                        @Value("${USER_SERVICE_ID:USER-SERVICE}") String userServiceId,
+                        @Value("${INVENTORY_SERVICE_ID:INVENTORY-SERVICE}") String inventoryServiceId
+    ) {
         this.productServiceId = productServiceId;
-        this.cartOrderServiceId=cartOrderServiceId;
-        this.userServiceId=userServiceId;
+        this.cartOrderServiceId = cartOrderServiceId;
+        this.userServiceId = userServiceId;
+        this.inventoryServiceId = inventoryServiceId;
     }
 
     @Bean
@@ -39,74 +41,56 @@ public class RouterConfig {
                                 .requestRateLimiter(requestRateLimiterConfig -> requestRateLimiterConfig
                                         .setKeyResolver(keyResolver())
                                         .setRateLimiter(redisRateLimiter()))
-                                .circuitBreaker(c->c.setName("ProductCircuitBreaker")
+                                .circuitBreaker(c -> c.setName("ProductCircuitBreaker")
                                         .setFallbackUri("forward:/product-fallback"))
                                 .rewritePath(
-                                "/products/(?<remaining>.*)",
-                                "/${remaining}"
-                        ))
-                        .uri("lb://"+productServiceId))
+                                        "/products/(?<remaining>.*)",
+                                        "/${remaining}"
+                                ))
+                        .uri("lb://" + productServiceId))
 
 
-                .route("cart-order-route",c->c
+                .route("cart-order-route", c -> c
                         .path("/cart-orders/**")
-                        .filters(f->f.rewritePath(
-                                "/cart-orders/(?<remaining>.*)",
-                                "/${remaining}"
-                        )
+                        .filters(f -> f.rewritePath(
+                                                "/cart-orders/(?<remaining>.*)",
+                                                "/${remaining}"
+                                        )
                                         .retry(retryConfig -> retryConfig
                                                 .setRetries(3)
-                                                .setMethods(HttpMethod.GET,HttpMethod.POST)
+                                                .setMethods(HttpMethod.GET, HttpMethod.POST)
                                                 .setBackoff(Duration.
-                                                        ofMillis(100),Duration
-                                                        .ofMillis(1000),2,true))
+                                                        ofMillis(100), Duration
+                                                        .ofMillis(1000), 2, true))
 
 
                         )
-                        .uri("lb://"+cartOrderServiceId))
+                        .uri("lb://" + cartOrderServiceId))
 
-                .route("users-route",route->route.path("/users/**")
-                        .filters(f->
+                .route("users-route", route -> route.path("/users/**")
+                        .filters(f ->
                                 f.stripPrefix(1)
-                        ).uri("lb://"+userServiceId))
+                        ).uri("lb://" + userServiceId))
+
+
+                .route("inventory-service", route -> route.path("/inventory/**")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://" + inventoryServiceId))
                 .build();
     }
 
 
     @Bean
-    public KeyResolver keyResolver(){
-        return exchange->Mono
+    public KeyResolver keyResolver() {
+        return exchange -> Mono
                 .just(exchange.getRequest()
                         .getHeaders()
                         .getFirst("user"));
     }
 
     @Bean
-    public RedisRateLimiter redisRateLimiter(){
-        return new RedisRateLimiter(4,4,1);
+    public RedisRateLimiter redisRateLimiter() {
+        return new RedisRateLimiter(4, 4, 1);
     }
 
-
-//    @Bean
-//    public RouteLocator prodroute(RouteLocatorBuilder builder) {
-//
-//        return builder.routes()
-//                .route("product-route", r -> r
-//                        .path("/products/**")
-//                        .filters(f -> f.rewritePath(
-//                                "/products/(?<remaining>.*)",
-//                                "/${remaining}"
-//                        ))
-//                        .uri(productServiceId))
-//
-//
-//                .route("cart-order-route",c->c
-//                        .path("/cart-orders/**")
-//                        .filters(f->f.rewritePath(
-//                                "/cart-orders/(?<remaining>.*)",
-//                                "/${remaining}"
-//                        ))
-//                        .uri(cartOrderServiceId))
-//                .build();
-//    }
 }
