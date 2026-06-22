@@ -21,11 +21,21 @@ public class Order {
     @Column(nullable = false, length = 120)
     private String userId;
 
+    @Column(nullable = false, length = 120)
+    private String billingName;
+
+    @Column(nullable = false,length = 13)
+    private String billingPhone;
+
     @Column(nullable = false, length = 400)
     private String shippingAddress;
 
     @Column(length = 80)
-    private String paymentMethod;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -42,6 +52,9 @@ public class Order {
 
     @Column
     private Instant cancelledAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String extraInformation;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderItem> items = new ArrayList<>();
@@ -65,6 +78,7 @@ public class Order {
     void onUpdate() {
         updatedAt = Instant.now();
     }
+
 
     public Long getId() {
         return id;
@@ -90,6 +104,22 @@ public class Order {
         this.userId = userId;
     }
 
+    public String getBillingName() {
+        return billingName;
+    }
+
+    public void setBillingName(String billingName) {
+        this.billingName = billingName;
+    }
+
+    public String getBillingPhone() {
+        return billingPhone;
+    }
+
+    public void setBillingPhone(String billingPhone) {
+        this.billingPhone = billingPhone;
+    }
+
     public String getShippingAddress() {
         return shippingAddress;
     }
@@ -98,12 +128,20 @@ public class Order {
         this.shippingAddress = shippingAddress;
     }
 
-    public String getPaymentMethod() {
+    public PaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(String paymentMethod) {
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 
     public OrderStatus getStatus() {
@@ -144,6 +182,14 @@ public class Order {
 
     public void setCancelledAt(Instant cancelledAt) {
         this.cancelledAt = cancelledAt;
+    }
+
+    public String getExtraInformation() {
+        return extraInformation;
+    }
+
+    public void setExtraInformation(String extraInformation) {
+        this.extraInformation = extraInformation;
     }
 
     public List<OrderItem> getItems() {
