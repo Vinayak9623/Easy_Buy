@@ -1,0 +1,101 @@
+package com.vd.easybuy.cart_order.service.impl;
+
+import com.vd.easybuy.cart_order.client.InventoryClient;
+import com.vd.easybuy.cart_order.client.ProductClientTest;
+import com.vd.easybuy.cart_order.dto.OrderCreateRequest;
+import com.vd.easybuy.cart_order.dto.ProductResponse;
+import com.vd.easybuy.cart_order.repository.CartRepository;
+import com.vd.easybuy.cart_order.repository.OrderRepository;
+import com.vd.easybuy.cart_order.service.OrderTestService;
+import io.github.resilience4j.retry.annotation.Retry;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+@Transactional
+@RequiredArgsConstructor
+@Slf4j
+public class OrderTestServiceImpl implements OrderTestService {
+
+    private final CartRepository cartRepository;
+    private final OrderRepository orderRepository;
+    private final InventoryClient inventoryClient;
+    private final RestTemplate restTemplate;
+    private final RestClient restClient;
+    private final ProductClientTest productClientTest;
+
+
+    @Override
+    public ProductResponse createOrder(OrderCreateRequest orderCreateRequest) {
+
+        String productId = orderCreateRequest.items().getFirst().productId();
+        var producturl = "http://localhost:8081/api/products/"+productId;
+        log.info("Product url {}", producturl);
+        //call to product service
+
+        try {
+            //ResponseEntity<ProductResponse> response = restTemplate.getForEntity(producturl, ProductResponse.class);
+            ProductResponse productResponse = restTemplate.getForObject(producturl, ProductResponse.class);
+            log.info("get Product response {}", productResponse);
+
+//            if(response.getStatusCode().is2xxSuccessful()){
+//                log.info("we recive successfull response from product entity");
+//            }
+           //return response.getBody();
+            return productResponse;
+        } catch (HttpClientErrorException ex) {
+             ex.printStackTrace();
+             throw new RuntimeException("Product not found"+ex.getStatusCode());
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+            throw new RuntimeException("something is wrong");
+        }
+    }
+
+
+    @Retry(name = "createOrderRetry",fallbackMethod = "createOrderWithRestClientFallback")
+    @Override
+    public ProductResponse createOrderWithRestClient(OrderCreateRequest orderCreateRequest) {
+        log.info("Retrying");
+        if(2<3){
+            throw new RuntimeException("For retry testing");
+        }
+
+        String productId=orderCreateRequest.items().getFirst().productId();
+        var productUrl="http://localhost:8081/api/products/"+productId;
+        try{
+            ProductResponse response = restClient.get().uri(productUrl)
+                    .header(HttpHeaders.ACCEPT,"application/json")
+                    .retrieve()
+                    .body(ProductResponse.class);
+            return response;
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+            throw new RuntimeException("Product not found with given id");
+        }
+    }
+
+
+    public ProductResponse createOrderWithRestClientFallback(OrderCreateRequest orderCreateRequest , Throwable t){
+        log.info("Create order fallback");
+        log.info("Exception {}",t.getMessage());
+
+        return null;
+    }
+
+    @Override
+    public ProductResponse createOrderWithFeign(OrderCreateRequest orderCreateRequest) {
+        log.info("Retrying");
+        if(2<5){throw new RuntimeException("For retry testing"+"Request failed");}
+        return productClientTest.getPeoductById(orderCreateRequest.items().getFirst().productId());
+    }
+
+}
