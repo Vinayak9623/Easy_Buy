@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 //@FeignClient(name = "${PRODUCT_SERVICE_ID}")
-@FeignClient(name = "PRODUCT-SERVICE",fallback = ProductClientTestFallback.class)
+//@FeignClient(name = "${PRODUCT_SERVICE_ID}",fallback = ProductClientTestFallback.class)
 public interface ProductClientTest {
 
     @GetMapping("/api/products/{productId}")
