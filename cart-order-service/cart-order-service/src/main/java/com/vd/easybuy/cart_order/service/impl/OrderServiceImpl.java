@@ -7,9 +7,11 @@ import com.vd.easybuy.cart_order.entity.*;
 import com.vd.easybuy.cart_order.exception.BusinessRuleException;
 import com.vd.easybuy.cart_order.exception.ExternalServiceException;
 import com.vd.easybuy.cart_order.exception.ResourceNotFoundException;
+import com.vd.easybuy.cart_order.producer.OrderEventPublisher;
 import com.vd.easybuy.cart_order.repository.CartRepository;
 import com.vd.easybuy.cart_order.repository.OrderRepository;
 import com.vd.easybuy.cart_order.service.OrderService;
+import com.vd.easybuy.common.events.OrderEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final InventoryClient inventoryClient;
     private final ProductClient productClient;
+    private final OrderEventPublisher orderEventPublisher;
 
 
     //1. Get Active Cart
@@ -74,6 +77,14 @@ public class OrderServiceImpl implements OrderService {
             cartRepository.save(cart);
 
             //order event publish
+
+            OrderEvent orderEvent=new OrderEvent();
+            orderEvent.setOrderId(saved.getId());
+            orderEvent.setUserId(saved.getUserId());
+            orderEvent.setStatus(saved.getStatus().toString());
+            orderEvent.setMessage("Order created successfully");
+            orderEvent.setTotalAmount(saved.getTotalAmount());
+            orderEventPublisher.publishOrderCreatedEvent(orderEvent);
 
             return toResponse(saved);
         }catch (RuntimeException ex) {
