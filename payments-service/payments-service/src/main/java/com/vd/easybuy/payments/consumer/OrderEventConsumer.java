@@ -47,6 +47,17 @@ public class OrderEventConsumer {
             log.info("Processing payment via Kafka consumer for Order ID: {}", orderEvent.getOrderId());
 
             Paymentresponse paymentResponse = paymentService.processPayment(paymentRequest);
+
+
+            // Publish success acknowledgment event
+            PaymentEvent paymentEvent = new PaymentEvent(
+                    paymentResponse.orderId(),
+                    paymentResponse.transactionId(),
+                    paymentResponse.amount(),
+                    paymentResponse.status().name(),
+                    "Payment processed successfully via Kafka consumer"
+            );
+            paymentEventPublisher.publishPaymentEvent(paymentEvent);
         }
         catch (Exception e){
 
