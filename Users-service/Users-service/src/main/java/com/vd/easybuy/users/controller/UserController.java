@@ -1,7 +1,6 @@
 package com.vd.easybuy.users.controller;
 
-import com.vd.easybuy.users.dto.ChangeRoleRequest;
-import com.vd.easybuy.users.dto.UserDto;
+import com.vd.easybuy.users.dto.*;
 import com.vd.easybuy.users.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,6 +23,16 @@ public class UserController {
     @PostMapping
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
         return new ResponseEntity<>(userService.createUser(userDto), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> loginUser(@Valid @RequestBody LoginRequest loginRequest){
+        return ResponseEntity.ok(userService.login(loginRequest));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenRefreshResponse> refresh(@Valid @RequestBody TokenRefreshRequest refreshRquest){
+        return ResponseEntity.ok(userService.refreshToken(refreshRquest));
     }
 
     @GetMapping("/{id}")

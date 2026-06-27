@@ -1,5 +1,6 @@
 package com.vd.easybuy.users.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vd.easybuy.users.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +18,7 @@ public class UserDto {
     private UUID id;
     private String name;
     private String email;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private Long phoneNumber;
     private String address;
