@@ -1,5 +1,6 @@
 package com.vd.easybuy.apigateway;
 
+import com.vd.easybuy.apigateway.filter.AuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
@@ -19,16 +20,19 @@ public class RouterConfig {
     private final String cartOrderServiceId;
     private final String userServiceId;
     private final String inventoryServiceId;
+    private final AuthenticationFilter authenticationFilter;
 
     public RouterConfig(@Value("${PRODUCT_SERVICE_ID:PRODUCT-SERVICE}") String productServiceId,
                         @Value("${CART_ORDER_SERVICE_ID:CART-ORDER-SERVICE}") String cartOrderServiceId,
                         @Value("${USER_SERVICE_ID:USER-SERVICE}") String userServiceId,
-                        @Value("${INVENTORY_SERVICE_ID:INVENTORY-SERVICE}") String inventoryServiceId
+                        @Value("${INVENTORY_SERVICE_ID:INVENTORY-SERVICE}") String inventoryServiceId,
+                        AuthenticationFilter authenticationFilter
     ) {
         this.productServiceId = productServiceId;
         this.cartOrderServiceId = cartOrderServiceId;
         this.userServiceId = userServiceId;
         this.inventoryServiceId = inventoryServiceId;
+        this.authenticationFilter=authenticationFilter;
     }
 
     @Bean
@@ -38,6 +42,8 @@ public class RouterConfig {
                 .route("product-route", r -> r
                         .path("/products/**")
                         .filters(f -> f
+                                .filter(authenticationFilter.apply(new AuthenticationFilter.Config()))
+                                .addRequestHeader("x-api-gateway","value from api gateway")
                                 .requestRateLimiter(requestRateLimiterConfig -> requestRateLimiterConfig
                                         .setKeyResolver(keyResolver())
                                         .setRateLimiter(redisRateLimiter()))
@@ -52,7 +58,9 @@ public class RouterConfig {
 
                 .route("cart-order-route", c -> c
                         .path("/cart-orders/**")
-                        .filters(f -> f.rewritePath(
+                        .filters(f -> f
+                                .filter(authenticationFilter.apply(new AuthenticationFilter.Config()))
+                                .rewritePath(
                                                 "/cart-orders/(?<remaining>.*)",
                                                 "/${remaining}"
                                         )
@@ -69,12 +77,15 @@ public class RouterConfig {
 
                 .route("users-route", route -> route.path("/users/**")
                         .filters(f ->
-                                f.stripPrefix(1)
+                                f.filter(authenticationFilter.apply(new AuthenticationFilter.Config()))
+                                        .stripPrefix(1)
                         ).uri("lb://" + userServiceId))
 
 
                 .route("inventory-service", route -> route.path("/inventory/**")
-                        .filters(f -> f.stripPrefix(1))
+                        .filters(f -> f
+                                .filter(authenticationFilter.apply(new AuthenticationFilter.Config()))
+                                .stripPrefix(1))
                         .uri("lb://" + inventoryServiceId))
                 .build();
     }
