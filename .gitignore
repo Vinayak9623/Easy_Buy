@@ -35,3 +35,9 @@ build/
 # JVM crash logs
 hs_err_*.log
 replay_*.log
+
+
+# Logs
+logs/
+*.log
+*.gz
