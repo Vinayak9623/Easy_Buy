@@ -54,20 +54,20 @@ public class OrderServiceImpl implements OrderService {
                         () -> new ResourceNotFoundException(
                                 "Active cart not found for userId: " + userId));
 
-        if(cart.getItems().isEmpty()){
+        if (cart.getItems().isEmpty()) {
             throw new BusinessRuleException("Cart is empty");
         }
 
-        List<InventorySnapshot> reservedSnapshots=new ArrayList<>();
+        List<InventorySnapshot> reservedSnapshots = new ArrayList<>();
 
-        try{
+        try {
 
-            for(CartItem item:cart.getItems()){
+            for (CartItem item : cart.getItems()) {
                 reservedSnapshots.add(inventoryClient
-                        .reserveByProductId(item.getProductId(),new ReserveStockRequest(item.getQuantity())));
+                        .reserveByProductId(item.getProductId(), new ReserveStockRequest(item.getQuantity())));
             }
 
-            Order order =buildOrderFromCart(cart,request);
+            Order order = buildOrderFromCart(cart, request);
 
             Order saved = orderRepository.save(order);
 
@@ -78,7 +78,7 @@ public class OrderServiceImpl implements OrderService {
 
             //order event publish
 
-            OrderEvent orderEvent=new OrderEvent();
+            OrderEvent orderEvent = new OrderEvent();
             orderEvent.setOrderId(saved.getId());
             orderEvent.setUserId(saved.getUserId());
             orderEvent.setStatus(saved.getStatus().toString());
@@ -87,7 +87,7 @@ public class OrderServiceImpl implements OrderService {
             orderEventPublisher.publishOrderCreatedEvent(orderEvent);
 
             return toResponse(saved);
-        }catch (RuntimeException ex) {
+        } catch (RuntimeException ex) {
             for (int i = reservedSnapshots.size() - 1; i >= 0; i--) {
                 CartItem item = cart.getItems().get(i);
                 try {
@@ -106,8 +106,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderResponse getOrderById(Long orderId) {
         return toResponse(orderRepository.findById(orderId)
-                .orElseThrow(()->
-                        new ResourceNotFoundException("order not fount with id: "+orderId)));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("order not fount with id: " + orderId)));
     }
 
     @Override
@@ -158,22 +158,32 @@ public class OrderServiceImpl implements OrderService {
         log.info("Updating payment status for Order ID: {} to {}", orderId, paymentStatus);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found for id: " + orderId));
-        order.setPaymentStatus(PaymentStatus.valueOf(paymentStatus));
+
+        PaymentStatus parsedStatus = PaymentStatus.valueOf(paymentStatus);
+        order.setPaymentStatus(parsedStatus);
+
+        if (parsedStatus == PaymentStatus.FAILED) {
+            log.warn("Payment failed for order id: {}.  Triggering compensation: cancelling order.", orderId);
+
+            order.setStatus(OrderStatus.CANCELLED);
+            order.setCancelledAt(Instant.now());
+        }
+
         orderRepository.save(order);
         log.info("Payment status successfully updated for Order ID: {}", orderId);
     }
 
-    private String normalizeUserId(String userId){
+    private String normalizeUserId(String userId) {
 
-        if(userId==null || userId.isBlank()){
+        if (userId == null || userId.isBlank()) {
             throw new BusinessRuleException("User id is required");
         }
         return userId.trim();
     }
 
-     private Order buildOrderFromCart(Cart cart,CheckoutRequest request){
+    private Order buildOrderFromCart(Cart cart, CheckoutRequest request) {
 
-        Order order =new Order();
+        Order order = new Order();
 
         order.setOrderNumber(UUID.randomUUID().toString());
         order.setUserId(cart.getUserId());
@@ -186,29 +196,29 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.CONFIRMED);
         order.setItems(new ArrayList<>());
 
-         BigDecimal total=BigDecimal.ZERO;
+        BigDecimal total = BigDecimal.ZERO;
 
 
-         for(CartItem cartItem:cart.getItems()){
+        for (CartItem cartItem : cart.getItems()) {
 
-             OrderItem orderItem =new OrderItem();
-             orderItem.setOrder(order);
-             orderItem.setProductId(cartItem.getProductId());
-             orderItem.setProductTitle(cartItem.getProductTitle());
-             orderItem.setUnitPrice(cartItem.getUnitPrice());
-             orderItem.setDiscountPercent(cartItem.getDiscountPercent());
-             orderItem.setQuantity(cartItem.getQuantity());
-             orderItem.setLineTotal(cartItem.getUnitPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())).setScale(2, RoundingMode.HALF_UP));
-             order.getItems().add(orderItem);
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProductId(cartItem.getProductId());
+            orderItem.setProductTitle(cartItem.getProductTitle());
+            orderItem.setUnitPrice(cartItem.getUnitPrice());
+            orderItem.setDiscountPercent(cartItem.getDiscountPercent());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setLineTotal(cartItem.getUnitPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())).setScale(2, RoundingMode.HALF_UP));
+            order.getItems().add(orderItem);
 
-             total=total.add(orderItem.getLineTotal());
-         }
+            total = total.add(orderItem.getLineTotal());
+        }
 
-         order.setTotalAmount(total.setScale(2, RoundingMode.HALF_UP));
+        order.setTotalAmount(total.setScale(2, RoundingMode.HALF_UP));
 
-         return order;
+        return order;
 
-     }
+    }
 
 
     private OrderResponse toResponse(Order order) {
