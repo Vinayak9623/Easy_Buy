@@ -453,3 +453,17 @@ This document contains the complete API specifications for the **Easy Buy** E-Co
 #### Cancel Order
 * **Method**: `DELETE`
 * **URL**: `/{orderId}`
+
+
+
+--------------------------------------------------------------------------------------------------------------
+
+-javaagent:"C:\Users\Umesh Salappa\OneDrive\Documents\Micro-Devops\Easy_Buy\monitoring\opentelemetry-javaagent.jar"
+-Dotel.service.name=api-gateway
+-Dotel.exporter.otlp.endpoint=http://localhost:4317
+-Dotel.exporter.otlp.protocol=grpc
+-Dotel.traces.exporter=otlp
+-Dotel.metrics.exporter=none
+-Dotel.logs.exporter=none
+-Dotel.javaagent.debug=true
+-Dotel.resource.attributes=deployment.environment=local,service.version=1.0
